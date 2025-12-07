@@ -1,0 +1,111 @@
+/* Quick Note Modal */
+.quick-note-modal .modal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-bottom: 0;
+}
+
+.quick-note-textarea {
+    width: 100%;
+    height: 120px;
+    resize: none;
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    font-family: inherit;
+    outline: none;
+}
+
+.quick-note-textarea:focus {
+    box-shadow: none;
+    border: none;
+}
+
+.quick-note-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 10px;
+    border-top: 1px solid var(--background-modifier-border);
+}
+
+.quick-note-char-count {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.quick-note-char-count.warning {
+    color: var(--text-error);
+}
+
+.quick-note-submit-btn {
+    background-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border-radius: 9999px;
+    /* Pill shape */
+    padding: 6px 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.quick-note-submit-btn:hover {
+    background-color: var(--interactive-accent-hover);
+}
+
+/* Timeline View */
+.quick-note-timeline-view {
+    padding: 10px;
+}
+
+.quick-note-timeline-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.quick-note-entry {
+    border-bottom: 1px solid var(--background-modifier-border);
+    padding-bottom: 15px;
+}
+
+.quick-note-entry-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.quick-note-date-header {
+    margin: 10px 0 5px 0;
+    padding-bottom: 5px;
+    border-bottom: 2px solid var(--interactive-accent);
+    font-size: 0.9em;
+    font-weight: bold;
+    color: var(--text-normal);
+}
+
+.quick-note-entry-content {
+    white-space: pre-wrap;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Mobile Optimizations */
+.is-mobile .quick-note-modal .modal-content {
+    padding: 15px;
+}
+
+.is-mobile .quick-note-textarea {
+    font-size: 16px;
+    min-height: 150px;
+}
+
+.is-mobile .quick-note-submit-btn {
+    padding: 8px 24px;
+}
+
+.is-mobile .quick-note-entry {
+    padding-bottom: 20px;
+}
