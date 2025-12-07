@@ -55,8 +55,8 @@
     grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
     gap: var(--size-4-3);
     /* ~12px */
-    padding-top: var(--size-4-4);
-    margin-bottom: var(--size-4-1);
+    padding-top: 0px;
+    margin-bottom: 0px;
 }
 
 .quick-note-preview-item {
@@ -117,7 +117,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 12px;
+    margin-top: 8px;
 }
 
 .quick-note-actions-left {
