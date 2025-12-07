@@ -32,5 +32,6 @@ jobs:
           files: |
             main.js
             manifest.json
+            styles.css
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
