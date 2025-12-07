@@ -20,8 +20,8 @@
 
 /* Compose Area */
 .quick-note-compose {
-    padding: var(--size-4-4);
-    /* ~16px */
+    padding: var(--size-4-3);
+    /* ~12px */
     border-bottom: 1px solid var(--background-modifier-border);
     background-color: var(--background-primary);
     flex-shrink: 0;
@@ -29,15 +29,15 @@
 
 .quick-note-textarea {
     width: 100%;
-    min-height: 80px;
+    min-height: 0px;
     resize: none;
     border: none;
     background: transparent;
-    font-size: var(--font-ui-medium);
-    line-height: var(--line-height-normal);
+    font-size: var(--font-ui-small);
+    line-height: 1.2;
     font-family: inherit;
     outline: none;
-    padding: 0;
+    padding: 8px;
     color: var(--text-normal);
 }
 
@@ -117,7 +117,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: var(--size-4-4);
+    margin-top: 12px;
 }
 
 .quick-note-actions-left {

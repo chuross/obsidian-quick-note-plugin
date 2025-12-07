@@ -42,7 +42,7 @@ export class QuickNoteView extends ItemView {
 
         const textArea = composeContainer.createEl('textarea', {
             cls: 'quick-note-textarea',
-            attr: { placeholder: "いま何を考えている？", rows: "4" }
+            attr: { placeholder: "いま何を考えている？", rows: "2" }
         });
 
         textArea.value = this.content;
