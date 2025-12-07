@@ -146,7 +146,7 @@
 
 /* Submit Button - Interactive Accent */
 .quick-note-submit-btn {
-    background-color: var(--interactive-accent);
+    background-color: var(--interactive-accent) !important;
     color: var(--text-on-accent);
     border-radius: 20px;
     /* Pillow shape */
