@@ -179,7 +179,8 @@
 }
 
 .quick-note-article {
-    padding: var(--size-4-4);
+    padding: 0px 16px 8px 16px;
+    /* Increased padding for better spacing */
     border-bottom: 1px solid var(--background-modifier-border);
 }
 
@@ -190,15 +191,19 @@
 .quick-note-article-content {
     color: var(--text-normal);
     white-space: pre-wrap;
-    font-size: var(--font-ui-medium);
-    line-height: var(--line-height-normal);
+    font-size: 14px;
+    /* Larger font size to match design */
+    line-height: 1.6;
+    /* Better line spacing */
+    margin-bottom: 8px;
 }
 
 /* Timeline Attachment Grid */
 .quick-note-grid {
-    margin-top: var(--size-4-4);
+    margin-top: 12px;
+    /* Consistent spacing */
     display: grid;
-    gap: var(--size-4-2);
+    gap: 8px;
 }
 
 /* 1 item: full width */
@@ -261,7 +266,8 @@
 .quick-note-meta {
     display: block;
     text-align: right;
-    font-size: var(--font-ui-smaller);
+    font-size: 14px;
+    /* Slightly larger timestamp */
     color: var(--text-muted);
-    margin-top: var(--size-4-2);
+    margin-top: 8px;
 }
