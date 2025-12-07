@@ -171,32 +171,11 @@
 
 .is-mobile .quick-note-textarea {
     font-size: 16px;
-    min-height: 100px;
-    /* 少し小さく */
-    margin-bottom: 5px;
-    /* ボタンとの距離を近づける */
-    box-sizing: border-box;
-}
-
-.is-mobile .quick-note-actions {
-    width: 100%;
-    /* 幅を確保 */
-    margin-top: 5px;
-    /* 上のマージンを詰める */
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    flex-direction: row !important;
-}
-
-.is-mobile .quick-note-actions-left {
-    display: flex;
-    align-items: center;
+    min-height: 120px;
 }
 
 .is-mobile .quick-note-submit-btn {
-    padding: 6px 16px;
-    /* 大きすぎず、タップしやすいサイズに */
+    padding: 8px 20px;
     font-size: 14px;
 }
 
@@ -205,5 +184,6 @@
 }
 
 .is-mobile .quick-note-action-btn {
-    padding: 10px;
+    padding: 8px;
+    /* Larger touch target */
 }
