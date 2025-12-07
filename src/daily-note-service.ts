@@ -73,14 +73,14 @@ export class DailyNoteService {
     }
 
 
-    async getDailyNotes(dateStr: string): Promise<{ timestamp: string; content: string }[]> {
+    async getDailyNotes(dateStr: string): Promise<{ timestamp: string; content: string; attachments: string[] }[]> {
         const dailyNote = await this.getDailyNoteIfExists(dateStr);
         if (!dailyNote) return [];
 
         const fileContent = await this.app.vault.read(dailyNote);
 
         const lines = fileContent.split('\n');
-        const entries: { timestamp: string; content: string }[] = [];
+        const entries: { timestamp: string; content: string; attachments: string[] }[] = [];
 
         // 正規表現でパース: "- HH:mm Content"
         // ユーザーの設定したフォーマットに依存するが、ここでは簡易的にデフォルトの構造を想定
@@ -90,9 +90,25 @@ export class DailyNoteService {
         for (const line of lines) {
             const match = line.match(timeRegex);
             if (match) {
+                const fullContent = match[2].trim();
+
+                // 添付ファイルを抽出 ![[ファイル名]] の形式
+                const attachmentRegex = /!\[\[([^\]]+)\]\]/g;
+                const attachments: string[] = [];
+                let contentWithoutAttachments = fullContent;
+                let attachMatch;
+
+                while ((attachMatch = attachmentRegex.exec(fullContent)) !== null) {
+                    attachments.push(attachMatch[1]);
+                }
+
+                // テキスト部分から添付ファイルの記法を除去
+                contentWithoutAttachments = fullContent.replace(attachmentRegex, '').trim();
+
                 entries.push({
                     timestamp: match[1],
-                    content: match[2].trim()
+                    content: contentWithoutAttachments,
+                    attachments: attachments
                 });
             }
         }

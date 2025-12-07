@@ -148,7 +148,47 @@ export class QuickNoteView extends ItemView {
                 for (const note of reversedNotes) {
                     const entry = list.createEl('div', { cls: 'quick-note-entry' });
                     entry.createEl('div', { cls: 'quick-note-entry-header', text: note.timestamp });
-                    entry.createEl('div', { cls: 'quick-note-entry-content', text: note.content });
+
+                    if (note.content) {
+                        entry.createEl('div', { cls: 'quick-note-entry-content', text: note.content });
+                    }
+
+                    // 添付ファイルがあれば表示
+                    if (note.attachments && note.attachments.length > 0) {
+                        const attachmentsContainer = entry.createEl('div', { cls: 'quick-note-entry-attachments' });
+
+                        for (const attachment of note.attachments) {
+                            const file = this.app.vault.getAbstractFileByPath(attachment);
+
+                            // 画像ファイルかどうか判定
+                            const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
+                            const ext = attachment.split('.').pop()?.toLowerCase();
+
+                            if (ext && imageExtensions.includes(ext) && file) {
+                                const img = attachmentsContainer.createEl('img', {
+                                    cls: 'quick-note-attachment-img',
+                                    attr: {
+                                        src: this.app.vault.getResourcePath(file as any),
+                                        alt: attachment
+                                    }
+                                });
+                            } else {
+                                // 画像以外のファイルはリンクとして表示
+                                const link = attachmentsContainer.createEl('a', {
+                                    cls: 'quick-note-attachment-link',
+                                    text: `📎 ${attachment}`,
+                                    attr: { href: '#' }
+                                });
+                                link.addEventListener('click', (e) => {
+                                    e.preventDefault();
+                                    if (file) {
+                                        // ファイルを開く
+                                        this.app.workspace.openLinkText(attachment, '', false);
+                                    }
+                                });
+                            }
+                        }
+                    }
                 }
             }
         }
