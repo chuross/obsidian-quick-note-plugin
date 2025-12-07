@@ -9,7 +9,7 @@ export const QUICK_NOTE_VIEW_TYPE = 'quick-note-view';
 export class QuickNoteView extends ItemView {
     private service: DailyNoteService;
     private content: string = '';
-    private attachmentPath: string | null = null;
+    private attachmentPaths: string[] = [];
 
     constructor(leaf: WorkspaceLeaf, service: DailyNoteService) {
         super(leaf);
@@ -37,88 +37,62 @@ export class QuickNoteView extends ItemView {
         container.empty();
         container.addClass('quick-note-view');
 
-        // --- 投稿エリア ---
-        const inputContainer = container.createEl('div', { cls: 'quick-note-input-container' });
+        // --- 投稿エリア (Compose Area) ---
+        const composeContainer = container.createEl('div', { cls: 'quick-note-compose' });
 
-        const textArea = inputContainer.createEl('textarea', {
+        const textArea = composeContainer.createEl('textarea', {
             cls: 'quick-note-textarea',
-            attr: { placeholder: "What's happening?" }
+            attr: { placeholder: "いま何を考えている？", rows: "4" }
         });
 
-        // 状態復元（もしあれば）
         textArea.value = this.content;
-
         textArea.addEventListener('input', (e) => {
             this.content = (e.target as HTMLTextAreaElement).value;
         });
 
         textArea.addEventListener('keydown', async (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            // Command+Enter or Ctrl+Enter to submit
+            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                 e.preventDefault();
                 await this.submit();
             }
         });
 
-        const actionsFooter = inputContainer.createEl('div', { cls: 'quick-note-actions' });
+        // 添付ファイルプレビューエリア
+        const previewGrid = composeContainer.createEl('div', { cls: 'quick-note-attachments-preview' });
+        this.renderAttachmentPreviews(previewGrid);
+
+        // アクションフッター
+        const actionsFooter = composeContainer.createEl('div', { cls: 'quick-note-actions' });
         const leftActions = actionsFooter.createEl('div', { cls: 'quick-note-actions-left' });
 
-        // 添付ファイルボタン
-        const attachBtn = leftActions.createEl('button', { cls: 'quick-note-action-btn', attr: { 'aria-label': 'Attach file' } });
+        // 添付ファイルボタン (Clip icon)
+        const attachBtn = leftActions.createEl('button', {
+            cls: 'quick-note-action-btn',
+            attr: { 'aria-label': 'Attach file' }
+        });
         setIcon(attachBtn, 'paperclip');
 
-        const attachStatus = leftActions.createEl('span', { cls: 'quick-note-attach-status' });
-
         attachBtn.addEventListener('click', () => {
-            // ファイル選択ダイアログを作成して開く
             const input = document.createElement('input');
             input.type = 'file';
+            input.multiple = true; // Allow multiple files
             input.onchange = async (e: any) => {
-                const file = e.target.files[0];
-                if (file) {
-                    try {
-                        const arrayBuffer = await file.arrayBuffer();
-                        const fileName = file.name;
-
-                        // attachmentsフォルダがあるか確認、なければ作成
-                        // 設定などでパスが変えられるのが理想だが、一旦ルートのattachmentsなどを想定
-                        // または、ユーザーの現在開いているファイルのフォルダなど。
-                        // ここではルート直下に配置する簡易実装、またはユーザー設定の添付ファイルフォルダを取得すべきだが
-                        // Obsidian APIで推奨される方法を使用
-                        const normalizedPath = `attachments/${fileName}`;
-
-                        // フォルダ作成
-                        const folder = this.app.vault.getAbstractFileByPath('attachments');
-                        if (!folder) {
-                            await this.app.vault.createFolder('attachments');
-                        }
-
-                        // ファイル作成（同名ファイルがある場合は別名にする処理が必要だが、簡易的に上書き禁止としてエラーハンドリング）
-                        let targetFile = this.app.vault.getAbstractFileByPath(normalizedPath);
-                        if (!targetFile) {
-                            targetFile = await this.app.vault.createBinary(normalizedPath, arrayBuffer);
-                        } else {
-                            // 既に存在する場合は簡易的にそのまま使う（あるいは名前を変える）
-                            new Notice(`File ${fileName} already exists. Using existing file.`);
-                        }
-
-                        this.attachmentPath = normalizedPath;
-                        attachStatus.setText(fileName);
-                        attachStatus.addClass('has-attachment');
-
-                    } catch (err) {
-                        console.error(err);
-                        new Notice('Failed to attach file.');
-                    }
+                const files = Array.from(e.target.files) as File[];
+                if (files.length > 0) {
+                    await this.handleFiles(files);
+                    // プレビュー再描画
+                    previewGrid.empty();
+                    this.renderAttachmentPreviews(previewGrid);
                 }
             };
             input.click();
         });
 
-
         // 投稿ボタン
         const submitBtn = actionsFooter.createEl('button', {
             cls: 'quick-note-submit-btn',
-            text: 'Note it'
+            text: '投稿'
         });
 
         submitBtn.addEventListener('click', async () => {
@@ -126,83 +100,165 @@ export class QuickNoteView extends ItemView {
         });
 
         // --- タイムラインエリア ---
-        container.createEl('h4', { text: 'Timeline', cls: 'quick-note-timeline-title' });
-        const list = container.createEl('div', { cls: 'quick-note-timeline-list' });
+        const timeline = container.createEl('div', { cls: 'quick-note-timeline' });
 
         // 直近7日分を取得
         for (let i = 0; i < 7; i++) {
-            // 新しい日付順にループする
             const date = window.moment().subtract(i, 'days');
             const dateStr = date.format(this.service.getSettings().dateFormat);
             const notes = await this.service.getDailyNotes(dateStr);
 
             if (notes.length > 0) {
-                // 日付ヘッダー
-                list.createEl('h5', { text: dateStr, cls: 'quick-note-date-header' });
-
-                // getDailyNotesは「上から順」= 文書内順序（古い順）で返すと仮定していたが
-                // デイリーノートが追記型なら下が新しい。timelineとしては新しい順（下から上）に表示したい
-                // なので reverse() する
+                // デイリーノートが追記型(末尾追加)なら、配列の下の方が新しい。
+                // タイムライン設定として新しいものを上に表示したいので reverse する。
                 const reversedNotes = [...notes].reverse();
 
                 for (const note of reversedNotes) {
-                    const entry = list.createEl('div', { cls: 'quick-note-entry' });
-                    entry.createEl('div', { cls: 'quick-note-entry-header', text: note.timestamp });
+                    const article = timeline.createEl('article', { cls: 'quick-note-article' });
 
+                    // 本文
                     if (note.content) {
-                        entry.createEl('div', { cls: 'quick-note-entry-content', text: note.content });
+                        article.createEl('p', { cls: 'quick-note-article-content', text: note.content });
                     }
 
-                    // 添付ファイルがあれば表示
+                    // 添付ファイルグリッド
                     if (note.attachments && note.attachments.length > 0) {
-                        const attachmentsContainer = entry.createEl('div', { cls: 'quick-note-entry-attachments' });
+                        const gridClass = note.attachments.length === 1 ? 'quick-note-grid-1' : 'quick-note-grid-multi';
+                        const grid = article.createEl('div', { cls: `quick-note-grid ${gridClass}` });
 
                         for (const attachment of note.attachments) {
                             const file = this.app.vault.getAbstractFileByPath(attachment);
+                            const gridItem = grid.createEl('div', { cls: 'quick-note-grid-item' });
 
-                            // 画像ファイルかどうか判定
+                            // 画像判定
                             const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
                             const ext = attachment.split('.').pop()?.toLowerCase();
 
                             if (ext && imageExtensions.includes(ext) && file) {
-                                const img = attachmentsContainer.createEl('img', {
-                                    cls: 'quick-note-attachment-img',
+                                const img = gridItem.createEl('img', {
+                                    cls: 'quick-note-img',
                                     attr: {
                                         src: this.app.vault.getResourcePath(file as any),
                                         alt: attachment
                                     }
                                 });
+                                // クリックで拡大表示（Obsidianの標準機能で開く）
+                                img.addEventListener('click', () => {
+                                    this.app.workspace.openLinkText(attachment, '', false);
+                                });
                             } else {
-                                // 画像以外のファイルはリンクとして表示
-                                const link = attachmentsContainer.createEl('a', {
-                                    cls: 'quick-note-attachment-link',
+                                // 非画像ファイル
+                                const link = gridItem.createEl('a', {
+                                    cls: 'quick-note-file-link',
                                     text: `📎 ${attachment}`,
                                     attr: { href: '#' }
                                 });
                                 link.addEventListener('click', (e) => {
                                     e.preventDefault();
-                                    if (file) {
-                                        // ファイルを開く
-                                        this.app.workspace.openLinkText(attachment, '', false);
-                                    }
+                                    this.app.workspace.openLinkText(attachment, '', false);
                                 });
                             }
                         }
                     }
+
+                    // タイムスタンプ
+                    // 簡易的に "HH:mm" を表示。日付が今日以外なら日付も入れるなどのロジックも可だが
+                    // ここではtimestamp (HH:mm) + dateStr を組み合わせて表示、あるいは単に HH:mm
+                    // デザイン要望では "2時間前" などの相対時間だが、データとしては HH:mm しかない場合も多い
+                    // 可能な限り相対時間に変換してみる
+                    const timeStr = note.timestamp; // HH:mm
+                    const noteDateTime = window.moment(`${dateStr} ${timeStr}`, `${this.service.getSettings().dateFormat} ${this.service.getSettings().timestampFormat}`);
+
+                    const timeDisplay = noteDateTime.isValid() ? noteDateTime.fromNow() : `${dateStr} ${timeStr}`;
+
+                    article.createEl('time', {
+                        cls: 'quick-note-meta',
+                        text: timeDisplay
+                    });
                 }
             }
         }
     }
 
+    renderAttachmentPreviews(container: HTMLElement) {
+        if (this.attachmentPaths.length === 0) return;
+
+        for (let i = 0; i < this.attachmentPaths.length; i++) {
+            const path = this.attachmentPaths[i];
+            const file = this.app.vault.getAbstractFileByPath(path);
+            const item = container.createEl('div', { cls: 'quick-note-preview-item' });
+
+            // 画像判定
+            const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
+            const ext = path.split('.').pop()?.toLowerCase();
+
+            if (ext && imageExtensions.includes(ext) && file) {
+                item.createEl('img', {
+                    cls: 'quick-note-preview-img',
+                    attr: {
+                        src: this.app.vault.getResourcePath(file as any)
+                    }
+                });
+            } else {
+                item.createEl('div', {
+                    cls: 'quick-note-preview-file',
+                    text: '📄' // Placeholder for non-image
+                });
+            }
+
+            // 削除ボタン
+            const removeBtn = item.createEl('button', { cls: 'quick-note-remove-attachment' });
+            setIcon(removeBtn, 'x'); // 'close' icon
+
+            removeBtn.addEventListener('click', () => {
+                this.attachmentPaths.splice(i, 1);
+                container.empty();
+                this.renderAttachmentPreviews(container);
+            });
+        }
+    }
+
+    async handleFiles(files: File[]) {
+        for (const file of files) {
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const fileName = file.name;
+                const normalizedPath = `attachments/${fileName}`;
+
+                // フォルダ作成
+                const folder = this.app.vault.getAbstractFileByPath('attachments');
+                if (!folder) {
+                    await this.app.vault.createFolder('attachments');
+                }
+
+                // ファイル保存
+                let targetFile = this.app.vault.getAbstractFileByPath(normalizedPath);
+                if (!targetFile) {
+                    await this.app.vault.createBinary(normalizedPath, arrayBuffer);
+                } else {
+                    // 同名ファイル存在時はそのまま使う（またはリネームロジックを入れる）
+                    new Notice(`Using existing file: ${fileName}`);
+                }
+
+                if (!this.attachmentPaths.includes(normalizedPath)) {
+                    this.attachmentPaths.push(normalizedPath);
+                }
+            } catch (err) {
+                console.error(err);
+                new Notice(`Failed to attach ${file.name}`);
+            }
+        }
+    }
+
     async submit() {
-        if (!this.content.trim() && !this.attachmentPath) return;
+        if (!this.content.trim() && this.attachmentPaths.length === 0) return;
 
         try {
-            await this.service.addNote(this.content, this.attachmentPath || undefined);
+            await this.service.addNote(this.content, this.attachmentPaths);
 
             // リセット
             this.content = '';
-            this.attachmentPath = null;
+            this.attachmentPaths = [];
 
             // 再描画
             await this.render();

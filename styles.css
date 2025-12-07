@@ -1,4 +1,263 @@
-/* Quick Note View (Integrated) */
+/* Quick Note View Styles */
+:root {
+    --qn-primary: #7f13ec;
+    --qn-bg-light: #f7f6f8;
+    --qn-bg-dark: #191022;
+    --qn-surface-light: #ffffff;
+    --qn-surface-dark: #191022;
+    --qn-text-light: #18181b;
+    /* zinc-900 */
+    --qn-text-dark: #ffffff;
+    --qn-text-muted-light: #71717a;
+    /* zinc-500 */
+    --qn-text-muted-dark: #a1a1aa;
+    /* zinc-400 */
+    --qn-border-light: #e4e4e7;
+    /* zinc-200 */
+    --qn-border-dark: rgba(255, 255, 255, 0.1);
+}
+
+.theme-dark {
+    --qn-bg: var(--qn-bg-dark);
+    --qn-surface: var(--qn-surface-dark);
+    --qn-text: var(--qn-text-dark);
+    --qn-text-muted: var(--qn-text-muted-dark);
+    --qn-border: var(--qn-border-dark);
+}
+
+.theme-light {
+    --qn-bg: var(--qn-bg-light);
+    --qn-surface: var(--qn-surface-light);
+    --qn-text: var(--qn-text-light);
+    --qn-text-muted: var(--qn-text-muted-light);
+    --qn-border: var(--qn-border-light);
+}
+
+.quick-note-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: hidden;
+    /* Main container fixed, children scroll */
+    background-color: var(--qn-bg);
+    color: var(--qn-text);
+    font-family: "Plus Jakarta Sans", "Noto Sans", sans-serif;
+    padding: 0 !important;
+    /* Override Obsidian default padding if any */
+}
+
+/* Header (Hidden as per request, but keeping structure if needed later) */
+.quick-note-header {
+    display: none;
+}
+
+/* Compose Area */
+.quick-note-compose {
+    padding: 16px;
+    border-bottom: 1px solid var(--qn-border);
+    background-color: var(--qn-bg);
+    flex-shrink: 0;
+}
+
+.quick-note-textarea {
+    width: 100%;
+    min-height: 80px;
+    resize: none;
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    line-height: normal;
+    font-family: inherit;
+    outline: none;
+    padding: 0;
+    color: var(--qn-text);
+}
+
+.quick-note-textarea::placeholder {
+    color: var(--qn-text-muted);
+}
+
+.quick-note-textarea:focus {
+    box-shadow: none;
+}
+
+/* Attachment Preview Grid (Compose) */
+.quick-note-attachments-preview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 12px;
+    padding-top: 16px;
+    margin-bottom: 4px;
+}
+
+.quick-note-preview-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: var(--background-secondary);
+}
+
+.quick-note-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.quick-note-remove-attachment {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: rgba(39, 39, 42, 0.7);
+    /* Zinc-800 / 70% */
+    color: white;
+    border-radius: 9999px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+}
+
+.quick-note-remove-attachment svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Actions Footer */
+.quick-note-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+}
+
+.quick-note-actions-left {
+    display: flex;
+    gap: 8px;
+}
+
+.quick-note-action-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--qn-primary) !important;
+    padding: 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s;
+}
+
+.quick-note-action-btn:hover {
+    background-color: rgba(127, 19, 236, 0.1);
+}
+
+.quick-note-submit-btn {
+    background-color: var(--qn-primary);
+    color: white;
+    border-radius: 9999px;
+    padding: 8px 16px;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    font-size: 16px;
+    line-height: normal;
+    letter-spacing: 0.015em;
+    transition: opacity 0.2s;
+}
+
+.quick-note-submit-btn:hover {
+    opacity: 0.9;
+}
+
+.quick-note-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Timeline */
+.quick-note-timeline {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-bottom: 20px;
+}
+
+.quick-note-article {
+    padding: 16px;
+    border-bottom: 1px solid var(--qn-border);
+}
+
+.quick-note-article-content {
+    color: var(--qn-text);
+    white-space: pre-wrap;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+/* Timeline Attachment Grid */
+.quick-note-grid {
+    margin-top: 16px;
+    display: grid;
+    gap: 8px;
+}
+
+/* 1 item: full width */
+.quick-note-grid-1 {
+    grid-template-columns: 1fr;
+}
+
+/* 2+ items: 2 columns */
+.quick-note-grid-multi {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.quick-note-grid-item {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: var(--background-secondary);
+}
+
+/* Aspect ratios */
+.quick-note-grid-1 .quick-note-grid-item {
+    aspect-ratio: 4 / 3;
+}
+
+.quick-note-grid-multi .quick-note-grid-item {
+    aspect-ratio: 1;
+    /* Square for grid */
+}
+
+.quick-note-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    cursor: pointer;
+}
+
+.quick-note-file-link {
+    display: block;
+    padding: 8px;
+    background: var(--background-modifier-form-field);
+    border-radius: 4px;
+    color: var(--qn-primary);
+    text-decoration: none;
+}
+
+.quick-note-meta {
+    display: block;
+    text-align: right;
+    font-size: 14px;
+    color: var(--qn-text-muted);
+    margin-top: 8px;
+}
+
 .quick-note-view {
     display: flex;
     flex-direction: column;

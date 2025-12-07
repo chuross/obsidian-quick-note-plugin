@@ -9,7 +9,7 @@ export class DailyNoteService {
         return this.settings;
     }
 
-    async addNote(content: string, attachmentPath?: string): Promise<void> {
+    async addNote(content: string, attachmentPaths?: string[]): Promise<void> {
         const now = window.moment();
         const dateStr = now.format(this.settings.dateFormat);
         const timestampStr = now.format(this.settings.timestampFormat);
@@ -17,13 +17,15 @@ export class DailyNoteService {
         // デイリーノートを取得または作成
         const dailyNote = await this.getOrCreateDailyNote(dateStr);
 
-        let fileLink = '';
-        if (attachmentPath) {
-            fileLink = ` ![[${attachmentPath}]]`;
+        let attachmentBlock = '';
+        if (attachmentPaths && attachmentPaths.length > 0) {
+            attachmentBlock = attachmentPaths.map(path => ` ![[${path}]]`).join('');
         }
 
-        // フォーマットされた行を作成
-        const formattedLine = `- ${timestampStr} ${content}${fileLink}\n`;
+        // フォーマットされた行を作成 (添付ファイルは末尾に配置)
+        // 添付ファイルがある場合、テキストの後にスペースを空けて追加、あるいは改行して追加するかは
+        // ユーザー要望 "添付ファイルは常に投稿内容の一番下に表示されるようにマークダウンを補正" に従う
+        const formattedLine = `- ${timestampStr} ${content}${attachmentBlock}\n`;
 
         // コンテンツを読み込む
         const fileContent = await this.app.vault.read(dailyNote);
