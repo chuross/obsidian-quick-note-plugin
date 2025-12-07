@@ -37,8 +37,11 @@ export class QuickNoteView extends ItemView {
         container.empty();
         container.addClass('quick-note-view');
 
-        // --- 投稿エリア (Compose Area) ---
-        const composeContainer = container.createEl('div', { cls: 'quick-note-compose' });
+        // --- スクロール可能なタイムラインコンテナを作成 ---
+        const timeline = container.createEl('div', { cls: 'quick-note-timeline' });
+
+        // --- 投稿エリア (Compose Area) をタイムライン内に配置 ---
+        const composeContainer = timeline.createEl('div', { cls: 'quick-note-compose' });
 
         const textArea = composeContainer.createEl('textarea', {
             cls: 'quick-note-textarea',
@@ -99,8 +102,7 @@ export class QuickNoteView extends ItemView {
             await this.submit();
         });
 
-        // --- タイムラインエリア ---
-        const timeline = container.createEl('div', { cls: 'quick-note-timeline' });
+        // --- タイムライン記事エリア（同じタイムライン内に配置） ---
 
         // 直近7日分を取得
         for (let i = 0; i < 7; i++) {

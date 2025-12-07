@@ -24,7 +24,7 @@
     /* ~12px */
     border-bottom: 1px solid var(--background-modifier-border);
     background-color: var(--background-primary);
-    flex-shrink: 0;
+    margin-bottom: 0;
 }
 
 .quick-note-textarea {
