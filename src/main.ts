@@ -1,8 +1,7 @@
-import { Plugin, WorkspaceLeaf } from 'obsidian';
+import { Plugin, WorkspaceLeaf, Platform } from 'obsidian';
 import { QuickNoteSettings, DEFAULT_SETTINGS, QuickNoteSettingTab } from './settings';
 import { DailyNoteService } from './daily-note-service';
-import { QuickNoteModal } from './quick-note-modal';
-import { TimelineView, TIMELINE_VIEW_TYPE } from './timeline-view';
+import { QuickNoteView, QUICK_NOTE_VIEW_TYPE } from './timeline-view'; // ファイル名はtimeline-view.tsのまま
 
 export default class QuickNotePlugin extends Plugin {
     settings: QuickNoteSettings;
@@ -13,41 +12,19 @@ export default class QuickNotePlugin extends Plugin {
 
         this.dailyNoteService = new DailyNoteService(this.app, this.settings);
 
-        // リボンアイコンを追加
+        // タイムラインビュー(統合ビュー)の登録
+        this.registerView(
+            QUICK_NOTE_VIEW_TYPE,
+            (leaf) => new QuickNoteView(leaf, this.dailyNoteService)
+        );
+
+        // リボンアイコンを追加 - ここでビューを開く
         this.addRibbonIcon('pencil', 'Quick Note', (evt: MouseEvent) => {
-            new QuickNoteModal(this.app, this.dailyNoteService).open();
-        });
-
-        // ステータスバーへの追加（必要であれば）
-        // const statusBarItemEl = this.addStatusBarItem();
-        // statusBarItemEl.setText('Quick Note Ready');
-
-        // コマンドパレットへの追加
-        this.addCommand({
-            id: 'open-quick-note-modal',
-            name: 'Open Quick Note',
-            callback: () => {
-                new QuickNoteModal(this.app, this.dailyNoteService).open();
-            }
-        });
-
-        this.addCommand({
-            id: 'open-timeline-view',
-            name: 'Open Timeline',
-            callback: () => {
-                this.activateView();
-            }
+            this.activateView();
         });
 
         // 設定タブの追加
         this.addSettingTab(new QuickNoteSettingTab(this.app, this));
-
-        // タイムラインビューの登録
-        this.registerView(
-            TIMELINE_VIEW_TYPE,
-            (leaf) => new TimelineView(leaf, this.dailyNoteService)
-        );
-
     }
 
     onunload() {
@@ -58,21 +35,25 @@ export default class QuickNotePlugin extends Plugin {
         const { workspace } = this.app;
 
         let leaf: WorkspaceLeaf | null = null;
-        const leaves = workspace.getLeavesOfType(TIMELINE_VIEW_TYPE);
+        const leaves = workspace.getLeavesOfType(QUICK_NOTE_VIEW_TYPE);
 
         if (leaves.length > 0) {
             // 既に開いている場合はそれを使う
             leaf = leaves[0];
-        } else {
-            // 新しく開く（右側のサイドバーなど）
-            leaf = workspace.getRightLeaf(false);
-            if (leaf) {
-                await leaf.setViewState({ type: TIMELINE_VIEW_TYPE, active: true });
-            }
-        }
-
-        if (leaf) {
             workspace.revealLeaf(leaf);
+        } else {
+            // モバイルの場合は通常のタブとして開く（全画面扱い）
+            // デスクトップの場合は右サイドバーに開く
+            if (Platform.isMobile) {
+                leaf = workspace.getLeaf('tab');
+            } else {
+                leaf = workspace.getRightLeaf(false);
+            }
+
+            if (leaf) {
+                await leaf.setViewState({ type: QUICK_NOTE_VIEW_TYPE, active: true });
+                workspace.revealLeaf(leaf);
+            }
         }
     }
 

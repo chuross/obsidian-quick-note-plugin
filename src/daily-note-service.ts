@@ -9,7 +9,7 @@ export class DailyNoteService {
         return this.settings;
     }
 
-    async addNote(content: string): Promise<void> {
+    async addNote(content: string, attachmentPath?: string): Promise<void> {
         const now = window.moment();
         const dateStr = now.format(this.settings.dateFormat);
         const timestampStr = now.format(this.settings.timestampFormat);
@@ -17,8 +17,13 @@ export class DailyNoteService {
         // デイリーノートを取得または作成
         const dailyNote = await this.getOrCreateDailyNote(dateStr);
 
+        let fileLink = '';
+        if (attachmentPath) {
+            fileLink = ` ![[${attachmentPath}]]`;
+        }
+
         // フォーマットされた行を作成
-        const formattedLine = `- ${timestampStr} ${content}\n`;
+        const formattedLine = `- ${timestampStr} ${content}${fileLink}\n`;
 
         // コンテンツを読み込む
         const fileContent = await this.app.vault.read(dailyNote);
@@ -67,11 +72,13 @@ export class DailyNoteService {
         await this.app.vault.modify(dailyNote, newContent);
     }
 
+
     async getDailyNotes(dateStr: string): Promise<{ timestamp: string; content: string }[]> {
-        const dailyNote = await this.getOrCreateDailyNote(dateStr);
+        const dailyNote = await this.getDailyNoteIfExists(dateStr);
         if (!dailyNote) return [];
 
         const fileContent = await this.app.vault.read(dailyNote);
+
         const lines = fileContent.split('\n');
         const entries: { timestamp: string; content: string }[] = [];
 
@@ -101,8 +108,7 @@ export class DailyNoteService {
         // 実際には getDailyNoteSettings() などを使うべきだが、
         // ここではファイル名検索で簡易実装する
 
-        const allFiles = this.app.vault.getMarkdownFiles();
-        const dailyNote = allFiles.find(file => file.basename === dateStr);
+        const dailyNote = await this.getDailyNoteIfExists(dateStr);
 
         if (dailyNote) {
             return dailyNote;
@@ -112,5 +118,11 @@ export class DailyNoteService {
         // デフォルトではルートに作成
         const createdFile = await this.app.vault.create(`${dateStr}.md`, '');
         return createdFile;
+    }
+
+    private async getDailyNoteIfExists(dateStr: string): Promise<TFile | null> {
+        const allFiles = this.app.vault.getMarkdownFiles();
+        const dailyNote = allFiles.find(file => file.basename === dateStr);
+        return dailyNote || null;
     }
 }
