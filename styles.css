@@ -183,10 +183,10 @@
     /* 幅を確保 */
     margin-top: 5px;
     /* 上のマージンを詰める */
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-direction: row;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-direction: row !important;
 }
 
 .is-mobile .quick-note-actions-left {
