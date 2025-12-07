@@ -1,10 +1,10 @@
 {
     "id": "obsidian-quick-note",
     "name": "Quick Note",
-    "version": "0.0.7",
+    "version": "0.0.8",
     "minAppVersion": "0.15.0",
     "description": "A Twitter-like quick note plugin for Obsidian.",
-    "author": "Antigravity",
-    "authorUrl": "https://github.com/yourusername/obsidian-quick-note-plugin",
+    "author": "chuross",
+    "authorUrl": "https://github.com/chuross/obsidian-quick-note-plugin",
     "isDesktopOnly": false
 }
